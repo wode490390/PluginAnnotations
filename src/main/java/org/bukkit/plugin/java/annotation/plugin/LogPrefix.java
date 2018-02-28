@@ -1,6 +1,9 @@
-package org.bukkit.plugin.java.annotation;
+package org.bukkit.plugin.java.annotation.plugin;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
@@ -9,8 +12,9 @@ import java.lang.annotation.Target;
  *  Represents the prefix used for the plugin's log entries, defaults to plugin name.
  */
 
+@Documented
+@Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface LogPrefix {
-
-    public String value();
+    String prefix();
 }

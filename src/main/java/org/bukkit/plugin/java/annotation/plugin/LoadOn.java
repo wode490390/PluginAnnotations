@@ -1,8 +1,11 @@
-package org.bukkit.plugin.java.annotation;
+package org.bukkit.plugin.java.annotation.plugin;
 
 import org.bukkit.plugin.PluginLoadOrder;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
@@ -11,8 +14,9 @@ import java.lang.annotation.Target;
  *  Represents the optional load order of the plugin.
  */
 
+@Documented
+@Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface LoadOn {
-
-    public PluginLoadOrder value();
+    PluginLoadOrder loadOn();
 }
