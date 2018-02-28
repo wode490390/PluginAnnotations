@@ -15,5 +15,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Repeatable(DependsOn.class)
 public @interface Dependency {
+    /**
+     * A plugin that is required to be present in order for this plugin to load.
+     */
     String plugin();
 }

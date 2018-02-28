@@ -16,5 +16,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface LogPrefix {
+    /**
+     * The name to use when logging to console instead of the plugin's name.
+     */
     String prefix();
 }

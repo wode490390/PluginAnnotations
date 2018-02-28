@@ -18,5 +18,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface LoadOn {
+    /**
+     * Explicitly state when the plugin should be loaded.
+     * If not defined, will default to {@link PluginLoadOrder#POSTWORLD}.
+     * See {@link PluginLoadOrder}
+     */
     PluginLoadOrder loadOn();
 }

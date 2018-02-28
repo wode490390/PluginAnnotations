@@ -6,6 +6,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+
+/**
+ *  Represents the required elements needed to register a Bukkit plugin.
+ *  This <i>must</i> be placed in the main class of your plugin
+ *  (i.e. the class that extends {@link org.bukkit.plugin.java.JavaPlugin}
+ */
 @Documented
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)

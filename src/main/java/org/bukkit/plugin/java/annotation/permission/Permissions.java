@@ -11,7 +11,6 @@ import java.lang.annotation.Target;
  *  <p>
  *  Represents a list of this plugin's registered name.
  */
-
 @Documented
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)

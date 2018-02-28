@@ -15,7 +15,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Repeatable(Commands.class)
 public @interface Command {
-
     /**
      * This command's name.
      */

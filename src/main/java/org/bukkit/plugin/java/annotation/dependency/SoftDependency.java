@@ -18,5 +18,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Repeatable(SoftDependsOn.class)
 public @interface SoftDependency {
+    /**
+     * A plugin that is required in order for this plugin to have full functionality.
+     */
     String plugin();
 }

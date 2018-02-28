@@ -18,5 +18,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Repeatable(Authors.class)
 public @interface Author {
+    /**
+     * The name of the person who developed this plugin.
+     */
     String name();
 }

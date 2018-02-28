@@ -16,5 +16,4 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 public @interface DependsOn {
     Dependency[] value() default {};
-
 }

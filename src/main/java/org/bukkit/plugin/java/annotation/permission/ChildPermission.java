@@ -13,6 +13,14 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 public @interface ChildPermission {
+    /**
+     * If true, this child node will inherit the parent {@link Permission}'s permission.
+     * If false, this child node inherits the inverse parent permission.
+     */
     boolean inherit() default true;
+
+    /**
+     * The name of the child permission.
+     */
     String name();
 }

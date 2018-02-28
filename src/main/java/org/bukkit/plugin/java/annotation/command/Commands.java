@@ -11,7 +11,6 @@ import java.lang.annotation.Target;
  *  <p>
  *  Represents a list of this plugin's registered command(s).
  */
-
 @Documented
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

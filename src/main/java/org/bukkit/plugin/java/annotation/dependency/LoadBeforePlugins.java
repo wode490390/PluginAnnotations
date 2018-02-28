@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Defines a list of plugin to load before this plugin
+ * Defines a list of plugin to load after this plugin
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)

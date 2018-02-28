@@ -16,6 +16,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface Description {
+    /**
+     * A human friendly description of the functionality this plugin provides.
+     */
     String desc();
 
 }

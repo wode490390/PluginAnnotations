@@ -34,7 +34,7 @@ public @interface Permission {
     PermissionDefault defaultValue() default PermissionDefault.OP;
 
     /**
-     * This permission's child nodes
+     * This permission's child nodes ({@link ChildPermission})
      */
     ChildPermission[] children() default {};
 }

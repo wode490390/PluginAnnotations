@@ -17,5 +17,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Repeatable(LoadBeforePlugins.class)
 public @interface LoadBefore {
+    /**
+     * A plugin that should be loaded after your plugin
+     */
     String plugin();
 }
