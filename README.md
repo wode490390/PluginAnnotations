@@ -6,66 +6,70 @@ See the [wiki](https://www.spigotmc.org/wiki/plugin-yml/) for more information.
 
 ## Example Usage
 ```
-package org.spigotmc.annotationtest;
-
-import org.bukkit.permissions.PermissionDefault;
-import org.bukkit.plugin.PluginLoadOrder;
-import org.bukkit.plugin.java.*;
-import org.bukkit.plugin.java.annotation.*;
-import org.bukkit.plugin.java.annotation.Commands.Cmd;
-import org.bukkit.plugin.java.annotation.Permissions.Perm;
-
 @Plugin(name = "TestPlugin", version = "1.0")
-@Description(desc = "A test plugin")
-@LoadOn(loadOn = PluginLoadOrder.POSTWORLD) // defaults to PluginLoadOrder.POSTWORLD if not preset
-@Author(name = "md_5")
-@Website(url = "spigotmc.org")
-@LogPrefix(prefix = "Testing")
-@Dependency(plugin = "WorldEdit")
-@Dependency(plugin = "Towny")
-@LoadBefore(plugin = "Essentials")
-@SoftDependency(plugin = "FAWE")
+@Description("A test plugin")
+@LoadOrder(PluginLoadOrder.STARTUP)
+@Author("md_5")
+@Website("www.spigotmc.org")
+@LogPrefix("Testing")
+@Dependency("WorldEdit")
+@Dependency("Towny")
+@LoadBefore("Towny")
+@SoftDependency("EssentialsX")
 @Command(name = "foo", desc = "Foo command", aliases = {"foobar", "fubar"}, permission = "test.foo", permissionMessage = "You do not have permission!", usage = "/<command> [test|stop]")
 @Permission(name = "test.foo", desc = "Allows foo command", defaultValue = PermissionDefault.OP)
 @Permission(name = "test.*", desc = "Wildcard permission", defaultValue = PermissionDefault.OP, children = {@ChildPermission(name ="test.foo")})
-public class Test extends JavaPlugin {}
+@ApiVersion(ApiVersion.Target.v1_13)
+public class TestPlugin extends JavaPlugin {
 ```
 Output:
 
 ```
-# Auto-generated plugin.yml, generated at 2018/03/06 18:15:44 by org.bukkit.plugin.java.annotation.PluginAnnotationProcessor
+# Auto-generated plugin.yml, generated at 2018/07/12 22:16:27 by org.bukkit.plugin.java.annotation.PluginAnnotationProcessor
 
-main: org.spigotmc.annotationtest.Test
+# Auto-generated plugin.yml, generated at 2018/07/13 00:16:24 by org.bukkit.plugin.java.annotation.PluginAnnotationProcessor
+
+main: org.spigotmc.spigot.TestPlugin
 name: TestPlugin
 version: '1.0'
 description: A test plugin
-load: POSTWORLD
+load: STARTUP
 author: md_5
-website: spigotmc.org
+website: www.spigotmc.org
 prefix: Testing
 depend:
 - WorldEdit
 - Towny
 softdepend:
-- FAWE
+- EssentialsX
 loadbefore:
-- Essentials
+- Towny
 commands:
-  foo:
-    description: Foo command
-    aliases:
-    - foobar
-    - fubar
-    permission: test.foo
-    permission-message: You do not have permission!
-    usage: /<command> [test|stop]
+  TestCommand:
+    aliases: testext2
+    permission: test.testext
+    permission-message: Oopsy!
+    usage: /testext test test
 permissions:
   test.foo:
     description: Allows foo command
-    default: op
   test.*:
     description: Wildcard permission
-    default: op
     children:
       test.foo: true
+api-version: '1.13'
 ```
+
+As of version 1.2.0-SNAPSHOT you can now also use the ```@Command``` and ```@Permission```
+annotations on classes that implement CommandExecutor.
+
+For example:
+```
+@Command(name = "TestCommand", aliases = "testext2", permission = "test.testext", permissionMessage = "Oopsy!", usage = "/testext test test")
+@Permission(name = "test.testext", desc = "Provides access to /textext command", defaultValue = PermissionDefault.TRUE)
+public class TestCommand implements CommandExecutor {
+```
+
+As of version 1.2.0-SNAPSHOT the ```@ApiVersion``` annotation was introduced to bring compatibility for
+Bukkit's new ```api-version``` plugin.yml option. This defaults to ```ApiVersion.Target.DEFAULT``` if not specified or included.
+All pre-1.13 plugins MUST use ```ApiVersion.Target.DEFAULT``` in order for the plugin to be loaded correctly.

@@ -2,24 +2,27 @@ package org.bukkit.plugin.java.annotation;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.annotation.command.Command;
+import org.bukkit.plugin.java.annotation.command.Commands;
 import org.bukkit.plugin.java.annotation.dependency.Dependency;
 import org.bukkit.plugin.java.annotation.dependency.LoadBefore;
 import org.bukkit.plugin.java.annotation.dependency.SoftDependency;
 import org.bukkit.plugin.java.annotation.permission.ChildPermission;
 import org.bukkit.plugin.java.annotation.permission.Permission;
+import org.bukkit.plugin.java.annotation.permission.Permissions;
+import org.bukkit.plugin.java.annotation.plugin.ApiVersion;
 import org.bukkit.plugin.java.annotation.plugin.Description;
-import org.bukkit.plugin.java.annotation.plugin.LoadOn;
+import org.bukkit.plugin.java.annotation.plugin.LoadOrder;
 import org.bukkit.plugin.java.annotation.plugin.LogPrefix;
 import org.bukkit.plugin.java.annotation.plugin.Plugin;
-import org.bukkit.plugin.java.annotation.plugin.UsesDatabase;
 import org.bukkit.plugin.java.annotation.plugin.Website;
 import org.bukkit.plugin.java.annotation.plugin.author.Author;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
-
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
@@ -31,231 +34,358 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import javax.swing.text.DateFormatter;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-@SupportedAnnotationTypes("org.bukkit.plugin.java.annotation.*")
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
+@SupportedAnnotationTypes( "org.bukkit.plugin.java.annotation.*" )
+@SupportedSourceVersion( SourceVersion.RELEASE_8 )
 public class PluginAnnotationProcessor extends AbstractProcessor {
 
     private boolean hasMainBeenFound = false;
 
-    private static final DateTimeFormatter dFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss", Locale.ENGLISH);
+    private static final DateTimeFormatter dFormat = DateTimeFormatter.ofPattern( "yyyy/MM/dd HH:mm:ss", Locale.ENGLISH );
 
     @Override
     public boolean process(Set<? extends TypeElement> annots, RoundEnvironment rEnv) {
-        Element main = null;
+        Element mainPluginElement = null;
         hasMainBeenFound = false;
 
-        Set<? extends Element> elements = rEnv.getElementsAnnotatedWith(Plugin.class);
-        if(elements.size() > 1) {
-            raiseError("Found more than one plugin main class");
+        Set<? extends Element> elements = rEnv.getElementsAnnotatedWith( Plugin.class );
+        if ( elements.size() > 1 ) {
+            raiseError( "Found more than one plugin main class" );
             return false;
         }
 
-        if(elements.isEmpty()) {
+        if ( elements.isEmpty() ) {
             return false;
         }
-        if(hasMainBeenFound){
-            raiseError("The plugin class has already been located, aborting!");
+        if ( hasMainBeenFound ) {
+            raiseError( "The plugin class has already been located, aborting!" );
             return false;
         }
-        main = elements.iterator().next();
+        mainPluginElement = elements.iterator().next();
         hasMainBeenFound = true;
 
-        TypeElement mainType;
-        if(main instanceof TypeElement){
-            mainType = (TypeElement) main;
+        TypeElement mainPluginType;
+        if ( mainPluginElement instanceof TypeElement ) {
+            mainPluginType = ( TypeElement ) mainPluginElement;
         } else {
-            raiseError("Element annotated with @Main is not a type!", main);
+            raiseError( "Element annotated with @Plugin is not a type!", mainPluginElement );
             return false;
         }
 
-        if(!(mainType.getEnclosingElement() instanceof PackageElement) && !mainType.getModifiers().contains(Modifier.STATIC)){
-            raiseError("Element annotated with @Main is not top-level or static nested!", mainType);
+        if ( !( mainPluginType.getEnclosingElement() instanceof PackageElement ) && !mainPluginType.getModifiers().contains( Modifier.STATIC ) ) {
+            raiseError( "Element annotated with @Plugin is not top-level or static nested!", mainPluginType );
             return false;
         }
 
-        if(!processingEnv.getTypeUtils().isSubtype(mainType.asType(), fromClass(JavaPlugin.class))){
-            raiseError("Class annotated with @Main is not an subclass of JavaPlugin!", mainType);
+        if ( !processingEnv.getTypeUtils().isSubtype( mainPluginType.asType(), fromClass( JavaPlugin.class ) ) ) {
+            raiseError( "Class annotated with @Plugin is not an subclass of JavaPlugin!", mainPluginType );
         }
 
         Map<String, Object> yml = Maps.newLinkedHashMap(); // linked so we can maintain the same output into file for sanity
 
         // populate mainName
-        final String mainName = mainType.getQualifiedName().toString();
-        yml.put("main", mainName); // always override this so we make sure the main class name is correct
+        final String mainName = mainPluginType.getQualifiedName().toString();
+        yml.put( "main", mainName ); // always override this so we make sure the main class name is correct
 
         // populate plugin name
-        processAndPut(yml, "name", mainType, mainName.substring(mainName.lastIndexOf('.') + 1), Plugin.class, String.class, "name");
+        processAndPut( yml, "name", mainPluginType, mainName.substring( mainName.lastIndexOf( '.' ) + 1 ), Plugin.class, String.class, "name" );
 
         // populate version
-        processAndPut(yml, "version", mainType, Plugin.DEFAULT_VERSION, Plugin.class, String.class, "version");
+        processAndPut( yml, "version", mainPluginType, Plugin.DEFAULT_VERSION, Plugin.class, String.class, "version" );
 
         // populate plugin description
-        processAndPut(yml, "description", mainType, null, Description.class, String.class, "desc");
+        processAndPut( yml, "description", mainPluginType, null, Description.class, String.class );
 
         // populate plugin load order
-        processAndPut(yml, "load", mainType, null, LoadOn.class, String.class,"loadOn");
+        processAndPut( yml, "load", mainPluginType, null, LoadOrder.class, String.class );
 
         // authors
-        Author[] authors = mainType.getAnnotationsByType(Author.class);
+        Author[] authors = mainPluginType.getAnnotationsByType( Author.class );
         List<String> authorMap = Lists.newArrayList();
-        for(Author auth : authors) {
-            authorMap.add(auth.name());
+        for ( Author auth : authors ) {
+            authorMap.add( auth.value() );
         }
-        if(authorMap.size() > 1) {
-            yml.put("authors", authorMap);
-        } else if(authorMap.size() == 1) {
-            yml.put("author", authorMap.iterator().next());
+        if ( authorMap.size() > 1 ) {
+            yml.put( "authors", authorMap );
+        } else if ( authorMap.size() == 1 ) {
+            yml.put( "author", authorMap.iterator().next() );
         }
 
         // website
-        processAndPut(yml, "website", mainType, null, Website.class, String.class, "url");
+        processAndPut( yml, "website", mainPluginType, null, Website.class, String.class );
 
         // prefix
-        processAndPut(yml, "prefix", mainType, null, LogPrefix.class, String.class, "prefix");
+        processAndPut( yml, "prefix", mainPluginType, null, LogPrefix.class, String.class );
 
         // dependencies
-        Dependency[] dependencies = mainType.getAnnotationsByType(Dependency.class);
+        Dependency[] dependencies = mainPluginType.getAnnotationsByType( Dependency.class );
         List<String> hardDependencies = Lists.newArrayList();
-        for(Dependency dep : dependencies) {
-            hardDependencies.add(dep.plugin());
+        for ( Dependency dep : dependencies ) {
+            hardDependencies.add( dep.value() );
         }
-        if(!hardDependencies.isEmpty()) yml.putIfAbsent("depend", hardDependencies);
+        if ( !hardDependencies.isEmpty() ) yml.put( "depend", hardDependencies );
 
         // soft-dependencies
-        SoftDependency[] softDependencies = mainType.getAnnotationsByType(SoftDependency.class);
-        String[] softDepArr = new String[softDependencies.length];
-        for(int i = 0; i < softDependencies.length; i++) {
-            softDepArr[i] = softDependencies[i].plugin();
+        SoftDependency[] softDependencies = mainPluginType.getAnnotationsByType( SoftDependency.class );
+        String[] softDepArr = new String[ softDependencies.length ];
+        for ( int i = 0; i < softDependencies.length; i++ ) {
+            softDepArr[ i ] = softDependencies[ i ].value();
         }
-        if(softDepArr.length > 0) yml.putIfAbsent("softdepend", softDepArr);
+        if ( softDepArr.length > 0 ) yml.put( "softdepend", softDepArr );
 
         // load-before
-        LoadBefore[] loadBefore = mainType.getAnnotationsByType(LoadBefore.class);
-        String[] loadBeforeArr = new String[loadBefore.length];
-        for(int i = 0; i < loadBefore.length; i++) {
-            loadBeforeArr[i] = loadBefore[i].plugin();
+        LoadBefore[] loadBefore = mainPluginType.getAnnotationsByType( LoadBefore.class );
+        String[] loadBeforeArr = new String[ loadBefore.length ];
+        for ( int i = 0; i < loadBefore.length; i++ ) {
+            loadBeforeArr[ i ] = loadBefore[ i ].value();
         }
-        if(loadBeforeArr.length > 0) yml.putIfAbsent("loadbefore", loadBeforeArr);
+        if ( loadBeforeArr.length > 0 ) yml.put( "loadbefore", loadBeforeArr );
 
         // commands
-        Command[] commands = mainType.getAnnotationsByType(Command.class);
-        Map<String, Object> commandMap = Maps.newLinkedHashMap();
-        for(Command command : commands) {
-            Map<String, Object> desc = Maps.newLinkedHashMap();
-            String name = command.name();
-            if(!command.desc().isEmpty()) desc.put("description", command.desc());
-            if(command.aliases().length != 0) desc.put("aliases", command.aliases());
-            if(!command.permission().isEmpty()) desc.put("permission", command.permission());
-            if(!command.permissionMessage().isEmpty()) desc.put("permission-message", command.permissionMessage());
-            if(!command.usage().isEmpty()) desc.put("usage", command.usage());
-            commandMap.put(name, desc);
+        // Begin processing external command annotations
+        Map<String, Map<String, Object>> commandMap = Maps.newLinkedHashMap();
+        boolean result = processExternalCommands( rEnv.getElementsAnnotatedWith( Command.class ), mainPluginType, commandMap );
+        if ( !result ) {
+            // #processExternalCommand already raised the errors
+            return false;
         }
-        if(!commandMap.isEmpty()) yml.putIfAbsent("commands", commandMap);
 
-        // permissions
-        Permission[] permissions = mainType.getAnnotationsByType(Permission.class);
-        Map<String, Object> permMap = Maps.newLinkedHashMap();
-        for(Permission perm : permissions) {
-            Map<String, Object> desc = Maps.newLinkedHashMap();
-            String name = perm.name();
-            if(!perm.desc().isEmpty()) desc.put("description", perm.desc());
-            desc.put("default", perm.defaultValue().toString());
-            Map<String, Object> children = Maps.newLinkedHashMap();
-            for(ChildPermission child : perm.children()) {
-                children.put(child.name(), child.inherit());
+        Commands commands = mainPluginType.getAnnotation( Commands.class );
+
+        // Check main class for any command annotations
+        if ( commands != null ) {
+            Map<String, Map<String, Object>> merged = Maps.newLinkedHashMap();
+            merged.putAll( commandMap );
+            merged.putAll( this.processCommands( commands ) );
+            commandMap = merged;
+        }
+
+        yml.put( "commands", commandMap );
+
+        // Permissions
+        Map<String, Map<String, Object>> permissionMetadata = Maps.newLinkedHashMap();
+
+        Set<? extends Element> permissionAnnotations = rEnv.getElementsAnnotatedWith( Command.class );
+        if ( permissionAnnotations.size() > 0 ) {
+            for ( Element element : permissionAnnotations ) {
+                if ( element.equals( mainPluginElement ) ) {
+                    continue;
+                }
+                if ( element.getAnnotation( Permission.class ) != null ) {
+                    Permission permissionAnnotation = element.getAnnotation( Permission.class );
+                    permissionMetadata.put( permissionAnnotation.name(), this.processPermission( permissionAnnotation ) );
+                }
             }
-            if(!children.isEmpty()) desc.put("children", children);
-            permMap.put(name, desc);
-        }
-        if(!permMap.isEmpty()) yml.putIfAbsent("permissions", permMap);
-
-        // database D: //TODO: Remove me!
-        if(mainType.getAnnotation(UsesDatabase.class) != null) {
-            yml.put("database", true);
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.MANDATORY_WARNING, "Database support was dropped in Bukkit in version 1.12.", mainType);
         }
 
-        Yaml yaml = new Yaml();
+        Permissions permissions = mainPluginType.getAnnotation( Permissions.class );
+        if ( permissions != null ) {
+            Map<String, Map<String, Object>> joined = Maps.newLinkedHashMap();
+            joined.putAll( permissionMetadata );
+            joined.putAll( this.processPermissions( permissions ) );
+            permissionMetadata = joined;
+        }
+        yml.put( "permissions", permissionMetadata );
+
+        // api-version
+        if ( mainPluginType.getAnnotation( ApiVersion.class ) != null ) {
+            ApiVersion apiVersion = mainPluginType.getAnnotation( ApiVersion.class );
+            if ( apiVersion.value() != ApiVersion.Target.DEFAULT ) {
+                yml.put( "api-version", apiVersion.value().getVersion() );
+            }
+        }
+
         try {
-            FileObject file = this.processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "plugin.yml");
-            try(Writer w = file.openWriter()) {
-                w.append("# Auto-generated plugin.yml, generated at ")
-                 .append(LocalDateTime.now().format(dFormat))
-                 .append(" by ")
-                 .append(this.getClass().getName())
-                 .append("\n\n");
+            Yaml yaml = new Yaml();
+            FileObject file = this.processingEnv.getFiler().createResource( StandardLocation.CLASS_OUTPUT, "", "plugin.yml" );
+            try ( Writer w = file.openWriter() ) {
+                w.append( "# Auto-generated plugin.yml, generated at " )
+                 .append( LocalDateTime.now().format( dFormat ) )
+                 .append( " by " )
+                 .append( this.getClass().getName() )
+                 .append( "\n\n" );
                 // have to format the yaml explicitly because otherwise it dumps child nodes as maps within braces.
-                String raw = yaml.dumpAs(yml, Tag.MAP, DumperOptions.FlowStyle.BLOCK);
-                w.write(raw);
+                String raw = yaml.dumpAs( yml, Tag.MAP, DumperOptions.FlowStyle.BLOCK );
+                w.write( raw );
                 w.flush();
                 w.close();
             }
             // try with resources will close the Writer since it implements Closeable
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
 
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, "NOTE: You are using org.bukkit.plugin.java.annotation, an experimental API!");
+        processingEnv.getMessager().printMessage( Diagnostic.Kind.WARNING, "NOTE: You are using org.bukkit.plugin.java.annotation, an experimental API!" );
         return true;
     }
 
     private void raiseError(String message) {
-        this.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, message);
+        this.processingEnv.getMessager().printMessage( Diagnostic.Kind.ERROR, message );
     }
 
     private void raiseError(String message, Element element) {
-        this.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, message, element);
+        this.processingEnv.getMessager().printMessage( Diagnostic.Kind.ERROR, message, element );
     }
 
     private TypeMirror fromClass(Class<?> clazz) {
-        return processingEnv.getElementUtils().getTypeElement(clazz.getName()).asType();
+        return processingEnv.getElementUtils().getTypeElement( clazz.getName() ).asType();
     }
 
     private <A extends Annotation, R> R processAndPut(
             Map<String, Object> map, String name, Element el, R defaultVal, Class<A> annotationType, Class<R> returnType) {
-        return processAndPut(map, name, el, defaultVal, annotationType, returnType, "value");
+        return processAndPut( map, name, el, defaultVal, annotationType, returnType, "value" );
     }
 
     private <A extends Annotation, R> R processAndPut(
             Map<String, Object> map, String name, Element el, R defaultVal, Class<A> annotationType, Class<R> returnType, String methodName) {
-        R result = process(el, defaultVal, annotationType, returnType, methodName);
-        if(result != null)
-            map.putIfAbsent(name, result);
+        R result = process( el, defaultVal, annotationType, returnType, methodName );
+        if ( result != null )
+            map.put( name, result );
         return result;
     }
 
     private <A extends Annotation, R> R process(Element el, R defaultVal, Class<A> annotationType, Class<R> returnType, String methodName) {
         R result;
-        A ann = el.getAnnotation(annotationType);
-        if(ann == null) result = defaultVal;
+        A ann = el.getAnnotation( annotationType );
+        if ( ann == null ) result = defaultVal;
         else {
             try {
-                Method value = annotationType.getMethod(methodName);
-                Object res = value.invoke(ann);
-                result = (R) (returnType == String.class ? res.toString() : returnType.cast(res));
-            } catch (Exception e) {
-                throw new RuntimeException(e); // shouldn't happen in theory (blame Choco if it does)
+                Method value = annotationType.getMethod( methodName );
+                Object res = value.invoke( ann );
+                result = ( R ) ( returnType == String.class ? res.toString() : returnType.cast( res ) );
+            } catch ( Exception e ) {
+                throw new RuntimeException( e ); // shouldn't happen in theory (blame Choco if it does)
             }
         }
         return result;
+    }
+
+    private boolean processExternalCommands(Set<? extends Element> commandExecutors, TypeElement mainPluginType, Map<String, Map<String, Object>> commandMetadata) {
+        for ( Element element : commandExecutors ) {
+            // Check to see if someone annotated a non-class with this
+            if ( !( element instanceof TypeElement ) ) {
+                this.raiseError( "Specified Command Executor class is not a class." );
+                return false;
+            }
+
+            TypeElement typeElement = ( TypeElement ) element;
+            if ( typeElement.equals( mainPluginType ) ) {
+                continue;
+            }
+
+            // Check to see if annotated class is actuall a command executor
+            TypeMirror mirror = this.processingEnv.getElementUtils().getTypeElement( CommandExecutor.class.getName() ).asType();
+            if ( !( this.processingEnv.getTypeUtils().isAssignable( typeElement.asType(), mirror ) ) ) {
+                this.raiseError( "Specified Command Executor class is not assignable from CommandExecutor " );
+                return false;
+            }
+
+            Command annotation = typeElement.getAnnotation( Command.class );
+            commandMetadata.put( annotation.name(), this.processCommand( annotation ) );
+        }
+        return true;
+    }
+
+    /**
+     * Processes a set of commands.
+     *
+     * @param commands The annotation.
+     *
+     * @return The generated command metadata.
+     */
+    protected Map<String, Map<String, Object>> processCommands(Commands commands) {
+        Map<String, Map<String, Object>> commandList = Maps.newLinkedHashMap();
+        for ( Command command : commands.value() ) {
+            commandList.put( command.name(), this.processCommand( command ) );
+        }
+        return commandList;
+    }
+
+    /**
+     * Processes a single command.
+     *
+     * @param commandAnnotation The annotation.
+     *
+     * @return The generated command metadata.
+     */
+    protected Map<String, Object> processCommand(Command commandAnnotation) {
+        Map<String, Object> command = Maps.newLinkedHashMap();
+
+        if ( commandAnnotation.aliases().length == 1 ) {
+            command.put( "aliases", commandAnnotation.aliases()[ 0 ] );
+        } else if ( commandAnnotation.aliases().length > 1 ) {
+            command.put( "aliases", commandAnnotation.aliases() );
+        }
+
+        if ( !"".equals( commandAnnotation.desc() ) ) {
+            command.put( "description", commandAnnotation.desc() );
+        }
+        if ( !"".equals( commandAnnotation.permission() ) ) {
+            command.put( "permission", commandAnnotation.permission() );
+        }
+        if ( !"".equals( commandAnnotation.permissionMessage() ) ) {
+            command.put( "permission-message", commandAnnotation.permissionMessage() );
+        }
+        if ( !"".equals( commandAnnotation.usage() ) ) {
+            command.put( "usage", commandAnnotation.usage() );
+        }
+
+        return command;
+    }
+
+    /**
+     * Processes a command.
+     *
+     * @param permissionAnnotation The annotation.
+     *
+     * @return The generated permission metadata.
+     */
+    protected Map<String, Object> processPermission(Permission permissionAnnotation) {
+        Map<String, Object> permission = Maps.newLinkedHashMap();
+
+        if ( !"".equals( permissionAnnotation.desc() ) ) {
+            permission.put( "description", permissionAnnotation.desc() );
+        }
+        if ( PermissionDefault.OP != permissionAnnotation.defaultValue() ) {
+            permission.put( "default", permissionAnnotation.defaultValue().toString().toLowerCase() );
+        }
+
+        if ( permissionAnnotation.children().length > 0 ) {
+            Map<String, Boolean> childrenList = Maps.newLinkedHashMap(); // maintain order
+            for ( ChildPermission childPermission : permissionAnnotation.children() ) {
+                childrenList.put( childPermission.name(), childPermission.inherit() );
+            }
+            permission.put( "children", childrenList );
+        }
+
+        return permission;
+    }
+
+    /**
+     * Processes a set of permissions.
+     *
+     * @param permissions The annotation.
+     *
+     * @return The generated permission metadata.
+     */
+    protected Map<String, Map<String, Object>> processPermissions(Permissions permissions) {
+        Map<String, Map<String, Object>> permissionList = Maps.newLinkedHashMap();
+        for ( Permission permission : permissions.value() ) {
+            permissionList.put( permission.name(), this.processPermission( permission ) );
+        }
+        return permissionList;
     }
 }

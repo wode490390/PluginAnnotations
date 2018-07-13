@@ -19,5 +19,5 @@ public @interface Website {
     /**
      * The url to the website where a user can download this plugin.
      */
-    String url();
+    String value();
 }

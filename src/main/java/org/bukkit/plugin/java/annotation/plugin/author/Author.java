@@ -21,5 +21,5 @@ public @interface Author {
     /**
      * The name of the person who developed this plugin.
      */
-    String name();
+    String value();
 }

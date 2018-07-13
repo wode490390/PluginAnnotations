@@ -8,6 +8,9 @@ import java.lang.annotation.Target;
 
 /**
  * Defines a list of plugin to load after this plugin
+ * <br>
+ * This specific annotation should not be used by people who do not know
+ * how repeating annotations work.
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)

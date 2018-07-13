@@ -17,11 +17,11 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
-public @interface LoadOn {
+public @interface LoadOrder {
     /**
      * Explicitly state when the plugin should be loaded.
      * If not defined, will default to {@link PluginLoadOrder#POSTWORLD}.
      * See {@link PluginLoadOrder}
      */
-    PluginLoadOrder loadOn();
+    PluginLoadOrder value() default PluginLoadOrder.POSTWORLD;
 }

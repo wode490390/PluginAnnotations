@@ -19,22 +19,22 @@ import java.lang.annotation.Target;
 @Repeatable(Permissions.class)
 public @interface Permission {
     /**
-     * This perm's name.
+     * This permission's name.
      */
     String name();
 
     /**
-     * This perm's description.
+     * This permission's description.
      */
     String desc() default "";
 
     /**
-     * This perm's default {@link PermissionDefault}
+     * This permission's default {@link PermissionDefault}
      */
     PermissionDefault defaultValue() default PermissionDefault.OP;
 
     /**
-     * This permission's child nodes ({@link ChildPermission})
+     * This permission's child nodes ( {@link ChildPermission} )
      */
     ChildPermission[] children() default {};
 }

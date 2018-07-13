@@ -19,6 +19,6 @@ public @interface Description {
     /**
      * A human friendly description of the functionality this plugin provides.
      */
-    String desc();
+    String value();
 
 }

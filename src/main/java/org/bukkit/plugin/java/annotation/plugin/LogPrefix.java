@@ -19,5 +19,5 @@ public @interface LogPrefix {
     /**
      * The name to use when logging to console instead of the plugin's name.
      */
-    String prefix();
+    String value();
 }

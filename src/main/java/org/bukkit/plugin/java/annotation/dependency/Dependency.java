@@ -8,7 +8,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Defines a plugin dependency
+ * Defines a plugin dependency.
+ * <br>
+ * The plugin's <b>name</b> attribute is required in order to load the dependency.<br>
+ * If any plugin listed is not found the plugin will fail to load. <br>
+ * If multiple plugins list each other as a dependency, so that there are no plugins with an unloadable dependency,
+ * all plugins will fail to load.
  */
 @Documented
 @Target(ElementType.TYPE)
@@ -18,5 +23,5 @@ public @interface Dependency {
     /**
      * A plugin that is required to be present in order for this plugin to load.
      */
-    String plugin();
+    String value();
 }

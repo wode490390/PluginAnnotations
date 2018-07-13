@@ -7,9 +7,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *  Part of the plugin annotations framework.
- *  <p>
- *  Represents the plugins a plugin depends on in order to be loaded
+ * Part of the plugin annotations framework.
+ * <p>
+ * Represents the plugins a plugin depends on in order to be loaded
+ * <br>
+ * This specific annotation should not be used by people who do not know
+ * how repeating annotations work.
  */
 @Documented
 @Target(ElementType.TYPE)

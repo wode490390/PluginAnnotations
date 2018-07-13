@@ -11,6 +11,9 @@ import java.lang.annotation.Target;
  *  Part of the plugin annotations framework.
  *  <p>
  *  Represents the plugin this plugin should be loaded before
+ *  <br>
+ *  The plugin's <b>name</b> attribute is required in order to specify the target. <br>
+ *  The plugin listed will be treated as a {@link SoftDependency}. <br>
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)
@@ -20,5 +23,5 @@ public @interface LoadBefore {
     /**
      * A plugin that should be loaded after your plugin
      */
-    String plugin();
+    String value();
 }
