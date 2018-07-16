@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * Defines a plugin permission
  */
 @Documented
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Repeatable(Permissions.class)
 public @interface Permission {

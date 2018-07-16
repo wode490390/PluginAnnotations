@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * how repeating annotations work.
  */
 @Documented
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Permissions {
     Permission[] value() default {};

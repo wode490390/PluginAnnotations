@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
  *  The plugin listed will be treated as a {@link SoftDependency}. <br>
  */
 @Documented
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Repeatable(LoadBeforePlugins.class)
 public @interface LoadBefore {

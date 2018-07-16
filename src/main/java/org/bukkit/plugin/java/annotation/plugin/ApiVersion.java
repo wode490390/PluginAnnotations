@@ -19,7 +19,7 @@ import java.util.Collection;
  * Pre-1.13 plugins do not need to use this annotation.
  */
 @Documented
-@Retention( RetentionPolicy.SOURCE )
+@Retention(RetentionPolicy.RUNTIME)
 @Target( ElementType.TYPE )
 public @interface ApiVersion {
 

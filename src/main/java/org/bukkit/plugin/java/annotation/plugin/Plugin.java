@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  *  (i.e. the class that extends {@link org.bukkit.plugin.java.JavaPlugin}
  */
 @Documented
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Plugin {
     /**

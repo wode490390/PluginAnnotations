@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  */
 @Documented
 @Target(ElementType.TYPE)
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface ChildPermission {
     /**
      * If true, this child node will inherit the parent {@link Permission}'s permission.

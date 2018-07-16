@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  *  in plugin.yml if a single author, otherwise {@code authors}
  */
 @Documented
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Repeatable(Authors.class)
 public @interface Author {
