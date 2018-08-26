@@ -30,10 +30,12 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
@@ -67,7 +69,7 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
             return false;
         }
 
-        if ( elements.isEmpty() ) {
+        if ( elements.isEmpty() ) { // don't raise error because we don't know which run this is
             return false;
         }
         if ( hasMainBeenFound ) {
@@ -81,18 +83,31 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
         if ( mainPluginElement instanceof TypeElement ) {
             mainPluginType = ( TypeElement ) mainPluginElement;
         } else {
-            raiseError( "Element annotated with @Plugin is not a type!", mainPluginElement );
+            raiseError( "Main plugin class is not a class", mainPluginElement );
             return false;
         }
 
-        if ( !( mainPluginType.getEnclosingElement() instanceof PackageElement ) && !mainPluginType.getModifiers().contains( Modifier.STATIC ) ) {
-            raiseError( "Element annotated with @Plugin is not top-level or static nested!", mainPluginType );
+        if ( !( mainPluginType.getEnclosingElement() instanceof PackageElement ) ) {
+            raiseError( "Main plugin class is not a top-level class", mainPluginType );
+            return false;
+        }
+
+        if ( mainPluginType.getModifiers().contains( Modifier.STATIC ) ) {
+            raiseError( "Main plugin class cannot be static nested", mainPluginType );
             return false;
         }
 
         if ( !processingEnv.getTypeUtils().isSubtype( mainPluginType.asType(), fromClass( JavaPlugin.class ) ) ) {
-            raiseError( "Class annotated with @Plugin is not an subclass of JavaPlugin!", mainPluginType );
+            raiseError( "Main plugin class is not an subclass of JavaPlugin!", mainPluginType );
         }
+
+        if ( mainPluginType.getModifiers().contains( Modifier.ABSTRACT ) ) {
+            raiseError( "Main plugin class cannot be abstract", mainPluginType );
+            return false;
+        }
+
+        // check for no-args constructor
+        checkForNoArgsConstructor( mainPluginType );
 
         Map<String, Object> yml = Maps.newLinkedHashMap(); // linked so we can maintain the same output into file for sanity
 
@@ -227,9 +242,18 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-
-        processingEnv.getMessager().printMessage( Diagnostic.Kind.WARNING, "NOTE: You are using org.bukkit.plugin.java.annotation, an experimental API!" );
         return true;
+    }
+
+    private void checkForNoArgsConstructor(TypeElement mainPluginType) {
+        ExecutableElement construct = null;
+        for ( ExecutableElement constructor : ElementFilter.constructorsIn( mainPluginType.getEnclosedElements() ) ) {
+            if ( constructor.getParameters().isEmpty() ) {
+                return;
+            }
+            construct = constructor;
+        }
+        raiseError( "Main plugin class must have a no argument constructor.", construct );
     }
 
     private void raiseError(String message) {
