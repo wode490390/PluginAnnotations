@@ -172,8 +172,8 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
         // commands
         // Begin processing external command annotations
         Map<String, Map<String, Object>> commandMap = Maps.newLinkedHashMap();
-        boolean result = processExternalCommands( rEnv.getElementsAnnotatedWith( Command.class ), mainPluginType, commandMap );
-        if ( !result ) {
+        boolean validCommandExecutors = processExternalCommands( rEnv.getElementsAnnotatedWith( Commands.class ), mainPluginType, commandMap );
+        if ( !validCommandExecutors ) {
             // #processExternalCommand already raised the errors
             return false;
         }
@@ -213,6 +213,12 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
             joined.putAll( this.processPermissions( permissions ) );
             permissionMetadata = joined;
         }
+
+        // Process Permissions on command executors
+        boolean validPermissions = processExternalPermissions( rEnv.getElementsAnnotatedWith( Permissions.class ), mainPluginType, permissionMetadata );
+        if ( !validPermissions ) {
+            return false;
+        }
         yml.put( "permissions", permissionMetadata );
 
         // api-version
@@ -245,15 +251,43 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
         return true;
     }
 
+    private boolean processExternalPermissions(Set<? extends Element> commandExecutors, TypeElement mainPluginType, Map<String, Map<String, Object>> yml) {
+        for ( Element element : commandExecutors ) {
+            // Check to see if someone annotated a non-class with this
+            if ( !( element instanceof TypeElement ) ) {
+                this.raiseError( "Specified Command Executor class is not a class." );
+                return false;
+            }
+
+            TypeElement typeElement = ( TypeElement ) element;
+            if ( typeElement.equals( mainPluginType ) ) {
+                continue;
+            }
+
+            // Check to see if annotated class is actuall a command executor
+            TypeMirror mirror = this.processingEnv.getElementUtils().getTypeElement( CommandExecutor.class.getName() ).asType();
+            if ( !( this.processingEnv.getTypeUtils().isAssignable( typeElement.asType(), mirror ) ) ) {
+                this.raiseError( "Specified Command Executor class is not assignable from CommandExecutor " );
+                return false;
+            }
+
+            Map<String, Map<String, Object>> newMap = Maps.newLinkedHashMap();
+            Permissions annotation = typeElement.getAnnotation( Permissions.class );
+            if ( annotation != null && annotation.value().length > 0 ) {
+                newMap.putAll( processPermissions( annotation ) );
+            }
+            yml.putAll( newMap );
+        }
+        return true;
+    }
+
     private void checkForNoArgsConstructor(TypeElement mainPluginType) {
-        ExecutableElement construct = null;
         for ( ExecutableElement constructor : ElementFilter.constructorsIn( mainPluginType.getEnclosedElements() ) ) {
             if ( constructor.getParameters().isEmpty() ) {
                 return;
             }
-            construct = constructor;
         }
-        raiseError( "Main plugin class must have a no argument constructor.", construct );
+        raiseError( "Main plugin class must have a no argument constructor.", mainPluginType );
     }
 
     private void raiseError(String message) {
@@ -317,8 +351,10 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
                 return false;
             }
 
-            Command annotation = typeElement.getAnnotation( Command.class );
-            commandMetadata.put( annotation.name(), this.processCommand( annotation ) );
+            Commands annotation = typeElement.getAnnotation( Commands.class );
+            if ( annotation != null && annotation.value().length > 0 ) {
+                commandMetadata.putAll( this.processCommands( annotation ) );
+            }
         }
         return true;
     }
@@ -354,16 +390,16 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
             command.put( "aliases", commandAnnotation.aliases() );
         }
 
-        if ( !"".equals( commandAnnotation.desc() ) ) {
+        if ( !commandAnnotation.desc().isEmpty() ) {
             command.put( "description", commandAnnotation.desc() );
         }
-        if ( !"".equals( commandAnnotation.permission() ) ) {
+        if ( !commandAnnotation.permission().isEmpty() ) {
             command.put( "permission", commandAnnotation.permission() );
         }
-        if ( !"".equals( commandAnnotation.permissionMessage() ) ) {
+        if ( !commandAnnotation.permissionMessage().isEmpty() ) {
             command.put( "permission-message", commandAnnotation.permissionMessage() );
         }
-        if ( !"".equals( commandAnnotation.usage() ) ) {
+        if ( !commandAnnotation.usage().isEmpty() ) {
             command.put( "usage", commandAnnotation.usage() );
         }
 
