@@ -16,7 +16,7 @@ See the [wiki](https://www.spigotmc.org/wiki/plugin-yml/) for more information.
 @Dependency("Towny")
 @LoadBefore("Towny")
 @SoftDependency("EssentialsX")
-@Command(name = "foo", desc = "Foo command", aliases = {"foobar", "fubar"}, permission = "test.foo", permissionMessage = "You do not have permission!", usage = "/<command> [test|stop]")
+@Commands(@Command(name = "foo", desc = "Foo command", aliases = {"foobar", "fubar"}, permission = "test.foo", permissionMessage = "You do not have permission!", usage = "/<command> [test|stop]"))
 @Permission(name = "test.foo", desc = "Allows foo command", defaultValue = PermissionDefault.OP)
 @Permission(name = "test.*", desc = "Wildcard permission", defaultValue = PermissionDefault.OP, children = {@ChildPermission(name ="test.foo")})
 @ApiVersion(ApiVersion.Target.v1_13)
