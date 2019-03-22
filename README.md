@@ -60,12 +60,12 @@ permissions:
 api-version: '1.13'
 ```
 
-As of version 1.2.0-SNAPSHOT you can now also use the ```@Command``` and ```@Permission```
+As of version 1.2.0-SNAPSHOT you can now also use the ```@Commands``` and ```@Permission```
 annotations on classes that implement CommandExecutor.
 
 For example:
 ```
-@Command(name = "TestCommand", aliases = "testext2", permission = "test.testext", permissionMessage = "Oopsy!", usage = "/testext test test")
+@Commands(@Command(name = "TestCommand", aliases = "testext2", permission = "test.testext", permissionMessage = "Oopsy!", usage = "/testext test test"))
 @Permission(name = "test.testext", desc = "Provides access to /textext command", defaultValue = PermissionDefault.TRUE)
 public class TestCommand implements CommandExecutor {
 ```
