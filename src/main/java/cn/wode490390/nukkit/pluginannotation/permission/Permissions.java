@@ -1,4 +1,4 @@
-package org.bukkit.plugin.java.annotation.permission;
+package cn.wode490390.nukkit.pluginannotation.permission;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

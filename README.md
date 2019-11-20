@@ -1,35 +1,35 @@
-# Usage
+# Plugin Annotations for Nukkit
+
+## Usage
 Add this jar to your pom.xml to enable automatic annotation-based plugin.yml generation.
 
 The only *required* annotation is the ```@Plugin``` annotation. All other annotations are optional.
-See the [wiki](https://www.spigotmc.org/wiki/plugin-yml/) for more information.
+See the [wiki](https://github.com/wode490390/PluginAnnotations/wiki) for more information.
 
-## Example Usage
-```
+### [Example Usage](https://github.com/wode490390/PluginAnnotations-Example)
+```java
 @Plugin(name = "TestPlugin", version = "1.0")
 @Description("A test plugin")
 @LoadOrder(PluginLoadOrder.STARTUP)
 @Author("md_5")
 @Website("www.spigotmc.org")
 @LogPrefix("Testing")
-@Dependency("WorldEdit")
-@Dependency("Towny")
-@LoadBefore("Towny")
-@SoftDependency("EssentialsX")
+@Dependency("FastAsyncWorldEdit")
+@Dependency("LuckPerms")
+@LoadBefore("MobPlugin")
+@SoftDependency("PlotSquared")
 @Commands(@Command(name = "foo", desc = "Foo command", aliases = {"foobar", "fubar"}, permission = "test.foo", permissionMessage = "You do not have permission!", usage = "/<command> [test|stop]"))
-@Permission(name = "test.foo", desc = "Allows foo command", defaultValue = PermissionDefault.OP)
-@Permission(name = "test.*", desc = "Wildcard permission", defaultValue = PermissionDefault.OP, children = {@ChildPermission(name ="test.foo")})
-@ApiVersion(ApiVersion.Target.v1_13)
-public class TestPlugin extends JavaPlugin {
+@Permission(name = "test.foo", desc = "Allows foo command", defaultValue = "op")
+@Permission(name = "test.*", desc = "Wildcard permission", defaultValue = "op", children = {@ChildPermission(name ="test.foo")})
+@ApiVersion("1.0.0")
+public class TestPlugin extends PluginBase {
 ```
 Output:
 
-```
-# Auto-generated plugin.yml, generated at 2018/07/12 22:16:27 by org.bukkit.plugin.java.annotation.PluginAnnotationProcessor
+```yaml
+# Auto-generated plugin.yml, generated at 2018/07/12 22:16:27 by cn.wode490390.nukkit.pluginannotation.PluginAnnotationProcessor
 
-# Auto-generated plugin.yml, generated at 2018/07/13 00:16:24 by org.bukkit.plugin.java.annotation.PluginAnnotationProcessor
-
-main: org.spigotmc.spigot.TestPlugin
+main: io.nukkit.exampleplugin.ExamplePlugin
 name: TestPlugin
 version: '1.0'
 description: A test plugin
@@ -38,38 +38,38 @@ author: md_5
 website: www.spigotmc.org
 prefix: Testing
 depend:
-- WorldEdit
-- Towny
+- FastAsyncWorldEdit
+- LuckPerms
 softdepend:
-- EssentialsX
+- PlotSquared
 loadbefore:
-- Towny
+- MobPlugin
 commands:
-  TestCommand:
-    aliases: testext2
-    permission: test.testext
-    permission-message: Oopsy!
-    usage: /testext test test
+  foo:
+    aliases:
+    - foobar
+    - fubar
+    description: Foo command
+    permission: test.foo
+    permission-message: You do not have permission!
+    usage: /<command> [test|stop]
 permissions:
   test.foo:
     description: Allows foo command
   test.*:
     description: Wildcard permission
     children:
-      test.foo: true
-api-version: '1.13'
+      test.foo: {}
+api:
+- 1.0.0
 ```
 
 As of version 1.2.0-SNAPSHOT you can now also use the ```@Commands``` and ```@Permission```
 annotations on classes that implement CommandExecutor.
 
 For example:
-```
+```java
 @Commands(@Command(name = "TestCommand", aliases = "testext2", permission = "test.testext", permissionMessage = "Oopsy!", usage = "/testext test test"))
 @Permission(name = "test.testext", desc = "Provides access to /textext command", defaultValue = PermissionDefault.TRUE)
 public class TestCommand implements CommandExecutor {
 ```
-
-As of version 1.2.0-SNAPSHOT the ```@ApiVersion``` annotation was introduced to bring compatibility for
-Bukkit's new ```api-version``` plugin.yml option. This defaults to ```ApiVersion.Target.DEFAULT``` if not specified or included.
-All pre-1.13 plugins MUST use ```ApiVersion.Target.DEFAULT``` in order for the plugin to be loaded correctly.

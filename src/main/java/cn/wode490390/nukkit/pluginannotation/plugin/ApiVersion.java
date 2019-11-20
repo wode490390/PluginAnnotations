@@ -1,23 +1,22 @@
-package org.bukkit.plugin.java.annotation.plugin;
+package cn.wode490390.nukkit.pluginannotation.plugin;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *  Part of the plugin annotations framework.
- *  <p>
- *  Represents the website of the plugin.
+ * Defines a api version
  */
-
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Website {
+@Target( ElementType.TYPE )
+@Repeatable(ApiVersions.class)
+public @interface ApiVersion {
     /**
-     * The url to the website where a user can download this plugin.
+     * The Nukkit API version this plugin supports.
      */
     String value();
 }

@@ -1,4 +1,4 @@
-package org.bukkit.plugin.java.annotation.dependency;
+package cn.wode490390.nukkit.pluginannotation.plugin.author;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -10,18 +10,16 @@ import java.lang.annotation.Target;
 /**
  *  Part of the plugin annotations framework.
  *  <p>
- *  Represents the plugin this plugin should be loaded before
- *  <br>
- *  The plugin's <b>name</b> attribute is required in order to specify the target. <br>
- *  The plugin listed will be treated as a {@link SoftDependency}. <br>
+ *  Represents the author(s) of the plugin. Translates to {@code author}
+ *  in plugin.yml if a single author, otherwise {@code authors}
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@Repeatable(LoadBeforePlugins.class)
-public @interface LoadBefore {
+@Repeatable(Authors.class)
+public @interface Author {
     /**
-     * A plugin that should be loaded after your plugin
+     * The name of the person who developed this plugin.
      */
     String value();
 }

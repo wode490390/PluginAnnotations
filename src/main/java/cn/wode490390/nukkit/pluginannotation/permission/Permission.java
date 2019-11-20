@@ -1,7 +1,4 @@
-package org.bukkit.plugin.java.annotation.permission;
-
-import org.bukkit.permissions.PermissionDefault;
-import org.bukkit.plugin.java.annotation.plugin.author.Authors;
+package cn.wode490390.nukkit.pluginannotation.permission;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -29,9 +26,9 @@ public @interface Permission {
     String desc() default "";
 
     /**
-     * This permission's default {@link PermissionDefault}
+     * This permission's default {@link cn.nukkit.permission.Permission}
      */
-    PermissionDefault defaultValue() default PermissionDefault.OP;
+    String defaultValue() default cn.nukkit.permission.Permission.DEFAULT_PERMISSION;
 
     /**
      * This permission's child nodes ( {@link ChildPermission} )

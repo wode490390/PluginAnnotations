@@ -1,6 +1,6 @@
-package org.bukkit.plugin.java.annotation.plugin;
+package cn.wode490390.nukkit.pluginannotation.plugin;
 
-import org.bukkit.plugin.PluginLoadOrder;
+import cn.nukkit.plugin.PluginLoadOrder;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

@@ -1,4 +1,4 @@
-package org.bukkit.plugin.java.annotation.permission;
+package cn.wode490390.nukkit.pluginannotation.permission;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -14,13 +14,17 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ChildPermission {
     /**
-     * If true, this child node will inherit the parent {@link Permission}'s permission.
-     * If false, this child node inherits the inverse of the parent permission.
-     */
-    boolean inherit() default true;
-
-    /**
      * The name of the child permission.
      */
     String name();
+
+    /**
+     * The description of the child permission.
+     */
+    String desc() default "";
+
+    /**
+     * The default {@link cn.nukkit.permission.Permission} of the child permission.
+     */
+    String defaultValue() default cn.nukkit.permission.Permission.DEFAULT_PERMISSION;
 }

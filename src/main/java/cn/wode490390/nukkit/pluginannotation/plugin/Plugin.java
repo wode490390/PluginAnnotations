@@ -1,4 +1,4 @@
-package org.bukkit.plugin.java.annotation.plugin;
+package cn.wode490390.nukkit.pluginannotation.plugin;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -8,9 +8,9 @@ import java.lang.annotation.Target;
 
 
 /**
- *  Represents the required elements needed to register a Bukkit plugin.
+ *  Represents the required elements needed to register a Nukkit plugin.
  *  This <i>must</i> be placed in the main class of your plugin
- *  (i.e. the class that extends {@link org.bukkit.plugin.java.JavaPlugin}
+ *  (i.e. the class that extends {@link cn.nukkit.plugin.PluginBase}
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

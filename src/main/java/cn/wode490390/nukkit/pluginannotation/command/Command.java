@@ -1,4 +1,4 @@
-package org.bukkit.plugin.java.annotation.command;
+package cn.wode490390.nukkit.pluginannotation.command;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

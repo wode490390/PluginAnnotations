@@ -1,25 +1,24 @@
-package org.bukkit.plugin.java.annotation;
+package cn.wode490390.nukkit.pluginannotation;
 
+import cn.nukkit.command.CommandExecutor;
+import cn.nukkit.plugin.PluginBase;
+import cn.wode490390.nukkit.pluginannotation.command.Command;
+import cn.wode490390.nukkit.pluginannotation.command.Commands;
+import cn.wode490390.nukkit.pluginannotation.dependency.Dependency;
+import cn.wode490390.nukkit.pluginannotation.dependency.LoadBefore;
+import cn.wode490390.nukkit.pluginannotation.dependency.SoftDependency;
+import cn.wode490390.nukkit.pluginannotation.permission.ChildPermission;
+import cn.wode490390.nukkit.pluginannotation.permission.Permission;
+import cn.wode490390.nukkit.pluginannotation.permission.Permissions;
+import cn.wode490390.nukkit.pluginannotation.plugin.ApiVersion;
+import cn.wode490390.nukkit.pluginannotation.plugin.Description;
+import cn.wode490390.nukkit.pluginannotation.plugin.LoadOrder;
+import cn.wode490390.nukkit.pluginannotation.plugin.LogPrefix;
+import cn.wode490390.nukkit.pluginannotation.plugin.Plugin;
+import cn.wode490390.nukkit.pluginannotation.plugin.Website;
+import cn.wode490390.nukkit.pluginannotation.plugin.author.Author;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.permissions.PermissionDefault;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.java.annotation.command.Command;
-import org.bukkit.plugin.java.annotation.command.Commands;
-import org.bukkit.plugin.java.annotation.dependency.Dependency;
-import org.bukkit.plugin.java.annotation.dependency.LoadBefore;
-import org.bukkit.plugin.java.annotation.dependency.SoftDependency;
-import org.bukkit.plugin.java.annotation.permission.ChildPermission;
-import org.bukkit.plugin.java.annotation.permission.Permission;
-import org.bukkit.plugin.java.annotation.permission.Permissions;
-import org.bukkit.plugin.java.annotation.plugin.ApiVersion;
-import org.bukkit.plugin.java.annotation.plugin.Description;
-import org.bukkit.plugin.java.annotation.plugin.LoadOrder;
-import org.bukkit.plugin.java.annotation.plugin.LogPrefix;
-import org.bukkit.plugin.java.annotation.plugin.Plugin;
-import org.bukkit.plugin.java.annotation.plugin.Website;
-import org.bukkit.plugin.java.annotation.plugin.author.Author;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
@@ -50,7 +49,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-@SupportedAnnotationTypes( "org.bukkit.plugin.java.annotation.*" )
+@SupportedAnnotationTypes( "cn.wode490390.nukkit.pluginannotation.*" )
 @SupportedSourceVersion( SourceVersion.RELEASE_8 )
 public class PluginAnnotationProcessor extends AbstractProcessor {
 
@@ -97,8 +96,8 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
             return false;
         }
 
-        if ( !processingEnv.getTypeUtils().isSubtype( mainPluginType.asType(), fromClass( JavaPlugin.class ) ) ) {
-            raiseError( "Main plugin class is not an subclass of JavaPlugin!", mainPluginType );
+        if ( !processingEnv.getTypeUtils().isSubtype( mainPluginType.asType(), fromClass( PluginBase.class ) ) ) {
+            raiseError( "Main plugin class is not an subclass of PluginBase!", mainPluginType );
         }
 
         if ( mainPluginType.getModifiers().contains( Modifier.ABSTRACT ) ) {
@@ -222,12 +221,15 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
         yml.put( "permissions", permissionMetadata );
 
         // api-version
-        if ( mainPluginType.getAnnotation( ApiVersion.class ) != null ) {
-            ApiVersion apiVersion = mainPluginType.getAnnotation( ApiVersion.class );
-            if ( apiVersion.value() != ApiVersion.Target.DEFAULT ) {
-                yml.put( "api-version", apiVersion.value().getVersion() );
-            }
+        ApiVersion[] apis = mainPluginType.getAnnotationsByType( ApiVersion.class );
+        List<String> compatibleAPIs = Lists.newArrayList();
+        for ( ApiVersion api : apis ) {
+            compatibleAPIs.add( api.value() );
         }
+        if ( compatibleAPIs.isEmpty() ) {
+            compatibleAPIs.add( "1.0.0" );
+        }
+        yml.put( "api", compatibleAPIs );
 
         try {
             Yaml yaml = new Yaml();
@@ -419,14 +421,23 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
         if ( !"".equals( permissionAnnotation.desc() ) ) {
             permission.put( "description", permissionAnnotation.desc() );
         }
-        if ( PermissionDefault.OP != permissionAnnotation.defaultValue() ) {
-            permission.put( "default", permissionAnnotation.defaultValue().toString().toLowerCase() );
+        if ( !cn.nukkit.permission.Permission.DEFAULT_PERMISSION.equalsIgnoreCase( permissionAnnotation.defaultValue() ) ) {
+            permission.put( "default", permissionAnnotation.defaultValue().toLowerCase() );
         }
 
         if ( permissionAnnotation.children().length > 0 ) {
-            Map<String, Boolean> childrenList = Maps.newLinkedHashMap(); // maintain order
+            Map<String, Object> childrenList = Maps.newLinkedHashMap(); // maintain order
             for ( ChildPermission childPermission : permissionAnnotation.children() ) {
-                childrenList.put( childPermission.name(), childPermission.inherit() );
+                Map<String, Object> childrenMap = Maps.newLinkedHashMap();
+
+                if ( !"".equals( childPermission.desc() ) ) {
+                    childrenMap.put( "description", childPermission.desc() );
+                }
+                if ( !cn.nukkit.permission.Permission.DEFAULT_PERMISSION.equalsIgnoreCase( childPermission.defaultValue() ) ) {
+                    childrenMap.put( "default", childPermission.defaultValue().toLowerCase() );
+                }
+
+                childrenList.put( childPermission.name(), childrenMap );
             }
             permission.put( "children", childrenList );
         }
