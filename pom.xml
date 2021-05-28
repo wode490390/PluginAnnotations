@@ -8,7 +8,7 @@
     <packaging>jar</packaging>
 
     <name>Plugin Annotations</name>
-    <url>http://www.spigotmc.org/</url>
+    <url>https://www.spigotmc.org/</url>
     <description>A annotation-based compile time plugin.yml generator.</description>
 
     <properties>
@@ -41,7 +41,7 @@
         </repository>
         <repository>
             <id>nukkitx-repo</id>
-            <url>http://repo.nukkitx.com/main/</url>
+            <url>https://repo.nukkitx.com/main/</url>
         </repository>
     </repositories>
 
